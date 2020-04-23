@@ -6,7 +6,7 @@ GroupLens Research has collected and made available rating data sets from the Mo
 
 1. SSH into your EMR cluster, create an S3 bucket for later use of dumping output files (for example, an S3 bucket with name 'udacity-yourname-cfnsadcnd'). You might need to update pip install the package 'configparser' by running `pip install --user configparser`.
 
-2. Go to the configuration file 'dl.cfg' to update your AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, INPUT, OUTPUT. It is recommended that you do not put any quotes around the strings. For example INPUT=s3a://udacity-dend/ NOT INPUT="s3a://udacity-dend/". OUTPUT can be the S3 bucket you just created, e.g. OUTPUT=s3a://udacity-yourname-cfnsadcnd/.
+2. Go to the configuration file 'dl.cfg' to update your KEY, SECRET (short names for AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY), INPUT, OUTPUT. It is recommended that you do not put any quotes around the strings. For example `INPUT=s3a://udacity-dend/` NOT `INPUT="s3a://udacity-dend/"`. OUTPUT can be the S3 bucket you just created, e.g. `OUTPUT=s3a://udacity-yourname-cfnsadcnd/`.
 
 3. Locate where spark-submit is with the command which spark-submit On an EMR cluster, it usually should be /usr/bin/spark-submit
 
