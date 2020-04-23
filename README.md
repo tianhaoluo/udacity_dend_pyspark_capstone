@@ -26,20 +26,20 @@ Then you can load other tables as well for some queries!
 
 # Step 1: Scope the Project and Gather Data
 ## Scope
-Explain what you plan to do in the project in more detail. What data do you use? What is your end solution look like? What tools did you use? 
+Q: Explain what you plan to do in the project in more detail. What data do you use? What is your end solution look like? What tools did you use? 
 
-I plan to read the MovieLens data from the S3 bucket. For this particular example, I am using the "MovieLens 1M Dataset" https://grouplens.org/datasets/movielens/ but we can potentially increase the size of the data with the same pipeline. Spark is the tool I use since it takes advantage of in-memory computation and lazy evaluation to hand large datasets.
+A: I plan to read the MovieLens data from the S3 bucket. For this particular example, I am using the "MovieLens 1M Dataset" https://grouplens.org/datasets/movielens/ but we can potentially increase the size of the data with the same pipeline. Spark is the tool I use since it takes advantage of in-memory computation and lazy evaluation to hand large datasets.
 
 ## Describe and Gather Data
-Describe the data sets you're using. Where did it come from? What type of information is included?
+Q: Describe the data sets you're using. Where did it come from? What type of information is included?
 
-The datasets come from https://grouplens.org/datasets/movielens/. Apart from the original data included, they also have a README file which maps the integer occupation code in the original dataset to actual string descriptions, e.g. 1 = "academic/educator".
+A: The datasets come from https://grouplens.org/datasets/movielens/. Apart from the original data included, they also have a README file which maps the integer occupation code in the original dataset to actual string descriptions, e.g. 1 = "academic/educator".
 
 ## Step 2: Explore and Assess the Data
 # Explore the Data
-Identify data quality issues, like missing values, duplicate data, etc.
+Q: Identify data quality issues, like missing values, duplicate data, etc.
 
-The data quality is high overall for this data. Since in movie titles, it's likely to contain "," and ":" and for movie genres, it's likely to have "|" when multiple genres are existing in the same movie. These characters therefore cannot be used as delimiter, the original data opted to use "::" as delimiter, which makes it not possible to be directly handled by pyspark. Workaround needed. For null values, not all users chose to provide the complete demographic information.
+A: The data quality is high overall for this data. Since in movie titles, it's likely to contain "," and ":" and for movie genres, it's likely to have "|" when multiple genres are existing in the same movie. These characters therefore cannot be used as delimiter, the original data opted to use "::" as delimiter, which makes it not possible to be directly handled by pyspark. Workaround needed. For null values, not all users chose to provide the complete demographic information.
 
 # Cleaning Steps
 Document steps necessary to clean the data
@@ -78,37 +78,41 @@ Document steps necessary to clean the data
 
 # Step 3: Define the Data Model¶
 ## 3.1 Conceptual Data Model
-Map out the conceptual data model and explain why you chose that model
+Q: Map out the conceptual data model and explain why you chose that model
 
-I opted to use the STAR schema, where the fact table is the ratings table which has the schema
+A: I opted to use the STAR schema, where the fact table is the ratings table which has the schema
 
+```
 root
  |-- rating_id: long (nullable = true)
  |-- user_id: integer (nullable = true)
  |-- movie_id: integer (nullable = true)
  |-- rating: integer (nullable = true)
  |-- datetime: timestamp (nullable = true)
-
+```
 the dimension table users has the schema
 
+```
 root
  |-- user_id: integer (nullable = true)
  |-- gender: string (nullable = true)
  |-- age: integer (nullable = true)
  |-- occupation: string (nullable = true)
  |-- zipcode: string (nullable = true)
-
+```
 and for the dimension table movies
 
+```
 root
  |-- movie_id: integer (nullable = true)
  |-- title: string (nullable = true)
  |-- genres: string (nullable = true)
+```
 
 # 3.2 Mapping Out Data Pipelines
-List the steps necessary to pipeline the data into the chosen data model
+Q: List the steps necessary to pipeline the data into the chosen data model
 
-Pretty straightforward, but I do need to
+A: Pretty straightforward, but I do need to
 
 1. Read in the data with a sparkSession instance.
 2. Do the transformations described above in Step 2.
@@ -119,19 +123,20 @@ Pretty straightforward, but I do need to
 Done! Spark's Schema On Read is really powerful such that we don't need to spend too much time specifying the type of each column.
 
 ## 4.2 Data Quality Checks
-Explain the data quality checks you'll perform to ensure the pipeline ran as expected. These could include:
+Q: Explain the data quality checks you'll perform to ensure the pipeline ran as expected. These could include:
 
-Integrity constraints on the relational database (e.g., unique key, data type, etc.)
-Unit tests for the scripts to ensure they are doing the right thing
+A: Integrity constraints on the relational database (e.g., unique key, data type, etc.)
+
+Q:Unit tests for the scripts to ensure they are doing the right thing
 Source/Count checks to ensure completeness
 
-For Spark, there isn't too many integrity constraints to check, since it is inferring schema automatically and I believe for this task, it is doing a great job!
+A: For Spark, there isn't too many integrity constraints to check, since it is inferring schema automatically and I believe for this task, it is doing a great job!
 Unit tests written to check the uniqueness of key and the completeness of data. DONE!
 
 ## 4.3 Data dictionary
-Create a data dictionary for your data model. For each field, provide a brief description of what the data is and where it came from. You can include the data dictionary in the notebook or in a separate file.
+Q: Create a data dictionary for your data model. For each field, provide a brief description of what the data is and where it came from. You can include the data dictionary in the notebook or in a separate file.
 
-Refer to the schemas shown in Section 3.1. 
+A: Refer to the schemas shown in Section 3.1. 
 
 For ratings table, 'ratings_id' is like the primary key and 'user_id' and 'movie_id' are used to link dimension tables 'users' and 'movies' respectively.
 
@@ -139,23 +144,23 @@ For users table, 'user_id' plays a similar role of primary key in the relational
 
 # Step 5: Complete Project Write Up
 ## Clearly state the rationale for the choice of tools and technologies for the project.
-Propose how often the data should be updated and why.
+Q: Propose how often the data should be updated and why.
 
-As often as the data provider update their dataset, which is not very often. If we opt to run the latest version of the dataset, we can run it every several months, whenever the providers are updating the data.
+A: As often as the data provider update their dataset, which is not very often. If we opt to run the latest version of the dataset, we can run it every several months, whenever the providers are updating the data.
 
 
-Write a description of how you would approach the problem differently under the following scenarios:
+## Write a description of how you would approach the problem differently under the following scenarios:
 
-The data was increased by 100x.
+Q: The data was increased by 100x.
 
-Use a more advanced version of AWS EMR cluster.
+A: Use a more advanced version of AWS EMR cluster.
 
-The data populates a dashboard that must be updated on a daily basis by 7am every day.
+Q: The data populates a dashboard that must be updated on a daily basis by 7am every day.
 
-Incorporate Airflow to schedule the task. I didn't use Airflow for this project since pyspark alone is sufficient for this specific task.
+A: Incorporate Airflow to schedule the task. I didn't use Airflow for this project since pyspark alone is sufficient for this specific task.
 
-The database needed to be accessed by 100+ people.
+Q: The database needed to be accessed by 100+ people.
 
-Just give appropriate permission to my team for the S3 bucket. (Give most of them read access, give the core development team read and write access)
+A: Just give appropriate permission to my team for the S3 bucket. (Give most of them read access, give the core development team read and write access)
 
 
