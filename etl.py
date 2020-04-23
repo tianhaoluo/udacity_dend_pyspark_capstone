@@ -4,11 +4,42 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf, col, monotonically_increasing_id
 from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, date_format
-from pyspark.sql.types import TimestampType, IntegerType
+from pyspark.sql.types import TimestampType, IntegerType, StringType
 from pyspark import SparkContext
+import unittest
 
 config = configparser.ConfigParser()
 config.read('dl.cfg')
+age_dict = { 1:  "Under 18",
+	    18:  "18-24",
+	    25:  "25-34",
+	    35:  "35-44",
+	    45:  "45-49",
+	    50:  "50-55",
+	    56:  "56+"}
+
+
+occupation_dict = {0:  "other",
+	         1:  "academic/educator",
+                 2:  "artist",
+                 3:  "clerical/admin",
+                 4:  "college/grad student",
+                 5:  "customer service",
+                 6:  "doctor/health care",
+                 7:  "executive/managerial",
+                 8:  "farmer",
+                 9:  "homemaker",
+                10:  "K-12 student",
+                11:  "lawyer",
+                12:  "programmer",
+                13:  "retired",
+                14:  "sales/marketing",
+                15:  "scientist",
+                16:  "self-employed",
+                17:  "technician/engineer",
+                18:  "tradesman/craftsman",
+                19:  "unemployed",
+                20:  "writer"}
 
 def create_spark_session():
     """Create a spark session
@@ -48,12 +79,18 @@ def process_data(spark, input_data, output_data, entity_name):
 	
     filepath = os.path.join(input_data, entity_name) +  ".dat"
     
-    # read from file
-    rdd = spark.sparkContext.textFile(filepath)
+    # read from file, get an intermediate RDD with '::' replaced by '\t' since Spark currently does not support delimiter with multiple characters
+    rdd = spark.sparkContext.textFile(filepath)\
+            .map(lambda line : '\t'.join(line.split("::")))
 
-    # Take care of the multi-character delimiter and rename the columns
-    df = rdd.map(lambda line : line.split("::")).toDF().toDF(*cols).dropDuplicates()
+    # Read as if it is a tab delimited file and change column names
+    df = spark.read.option("inferSchema", "true").option("delimiter", "\t").csv(rdd).toDF(*cols).dropDuplicates()
     
+    #Register a UDF to change the occupation column from integer code to string
+    occupation_code_str = udf(lambda code: occupation_dict.get(code,"unknown"), StringType()) 
+    #special cases:
+    if entity_name == "users":
+        df = df.withColumn('occupation_name',occupation_code_str('occupation')).drop('occupation').withColumnRenamed('occupation_name','occupation')
     # write songs table to parquet files partitioned by year and artist
     df.write.mode('overwrite').parquet(os.path.join(output_data,entity_name))
 	
@@ -65,7 +102,6 @@ def main():
          process_data(spark, input_data, output_data, entity_name)    
     spark.stop()
 
-import unittest
 
 class TestStringMethods(unittest.TestCase):
 
@@ -84,5 +120,5 @@ class TestStringMethods(unittest.TestCase):
             s.split(2)
 
 if __name__ == "__main__":
-    #main()
+    main()
     unittest.main()
