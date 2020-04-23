@@ -7,6 +7,7 @@ from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, dat
 from pyspark.sql.types import TimestampType, IntegerType, StringType
 from pyspark import SparkContext
 import unittest
+import pandas as pd
 
 config = configparser.ConfigParser()
 config.read('dl.cfg')
@@ -95,18 +96,27 @@ def process_data(spark, input_data, output_data, entity_name):
     df.write.mode('overwrite').parquet(os.path.join(output_data,entity_name))
 	
 def main():
+    """Processing the main data pipeline, generate a dictionary of pandas dataframe for testing
+    
+        Args:
+            None
+        Return:
+            test_dfs, type dict[pd.dataFrame]
+    """
     spark = create_spark_session()
+    test_dfs = {}
     input_data = config.get('S3','INPUT')
     output_data = config.get('S3','OUTPUT')
     for entity_name in ["movies","users","ratings"]:
-         process_data(spark, input_data, output_data, entity_name)    
+         process_data(spark, input_data, output_data, entity_name)
+         test_dfs[entity_name] = spark.read.parquet(os.path.join(output_data,entity_name)).limit(20).toPandas()  
     spark.stop()
+    return test_dfs
 
 
-class TestStringMethods(unittest.TestCase):
-
-    def test_upper(self):
-        self.assertEqual('foo'.upper(), 'FOO')
+class TestMethods(unittest.TestCase):
+    def test_hasrow(self):
+         self.assertTrue(movies.shape[0] > 0)
 
     def test_isupper(self):
         self.assertTrue('FOO'.isupper())
@@ -120,5 +130,8 @@ class TestStringMethods(unittest.TestCase):
             s.split(2)
 
 if __name__ == "__main__":
-    main()
+    test_dfs = main()
+    movies = test_dfs["movies"]
+    ratings = test_dfs["ratings"]
+    users = test_dfs["users"]
     unittest.main()
