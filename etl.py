@@ -87,12 +87,18 @@ def process_data(spark, input_data, output_data, entity_name):
     # Read as if it is a tab delimited file and change column names
     df = spark.read.option("inferSchema", "true").option("delimiter", "\t").csv(rdd).toDF(*cols).dropDuplicates()
     
-    #Register a UDF to change the occupation column from integer code to string
+    #Register UDFs to change the occupation column from integer code to string
     occupation_code_str = udf(lambda code: occupation_dict.get(code,"unknown"), StringType()) 
+    clean_zipcode = udf(lambda zipcode: zipcode.split("-")[0], StringType())
+    get_datetime = udf(lambda ts: datetime.utcfromtimestamp(ts), TimestampType())
+    
     #special cases:
     if entity_name == "users":
-        df = df.withColumn('occupation_name',occupation_code_str('occupation')).drop('occupation').withColumnRenamed('occupation_name','occupation')
-    # write songs table to parquet files partitioned by year and artist
+        df = df.withColumn('occupation_name',occupation_code_str('occupation')).drop('occupation').withColumnRenamed('occupation_name','occupation') \
+                .withColumn('zipcode_cleaned',clean_zipcode('zipcode')).drop('zipcode').withColumnRenamed('zipcode_cleaned','zipcode')
+    elif entity_name == "ratings":
+        df = df.withColumn("rating_id", monotonically_increasing_id()).withColumn('datetime',get_datetime('timestamp')).drop("timestamp")
+    # write songs table to parquet files
     df.write.mode('overwrite').parquet(os.path.join(output_data,entity_name))
 	
 def main():
@@ -115,19 +121,13 @@ def main():
 
 
 class TestMethods(unittest.TestCase):
-    def test_hasrow(self):
-         self.assertTrue(movies.shape[0] > 0)
+    def test_has_row(self):
+         self.assertEqual(movies.shape[0], 20)
 
-    def test_isupper(self):
-        self.assertTrue('FOO'.isupper())
-        self.assertFalse('Foo'.isupper())
+    def test_unique_ids(self):
+        self.assertEqual(ratings.shape[0],len(ratings.rating_id.unique()))
 
-    def test_split(self):
-        s = 'hello world'
-        self.assertEqual(s.split(), ['hello', 'world'])
-        # check that s.split fails when the separator is not a string
-        with self.assertRaises(TypeError):
-            s.split(2)
+    
 
 if __name__ == "__main__":
     test_dfs = main()
