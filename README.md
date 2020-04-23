@@ -112,12 +112,7 @@ root
 # 3.2 Mapping Out Data Pipelines
 Q: List the steps necessary to pipeline the data into the chosen data model
 
-A: Pretty straightforward, but I do need to
-
-1. Read in the data with a sparkSession instance.
-2. Do the transformations described above in Step 2.
-3. Write the pyspark dataframes back to S3 in parquet.
-
+A: read raw data files in S3 -> data cleaning and data transformations with PySpark -> write the PySpark DataFrames back to S3 in parquet files -> Run queries, machine learning models etc. by reading in the parquet files
 # Step 4: Run Pipelines to Model the Data
 ## 4.1 Create the data model
 Done! Spark's Schema On Read is really powerful such that we don't need to spend too much time specifying the type of each column.
