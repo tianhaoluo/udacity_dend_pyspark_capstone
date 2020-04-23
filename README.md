@@ -12,16 +12,8 @@ GroupLens Research has collected and made available rating data sets from the Mo
 
 4. Open the terminal, run /usr/bin/spark-submit etl.py
 
-5. Enjoy your new Data Lake for MovieLens! For example, you can load the songplays_table by running in Jupyter Notebook with a PySpark kernel
+5. Enjoy your new Data Lake for MovieLens! You can use the starter code in `testing.ipynb` and add some of your own queries.
 
-```
-config = configparser.ConfigParser()
-config.read('dl.cfg')
-output_data = config.get('S3','OUTPUT')
-ratings  = spark.read.parquet(os.path.join(output_data,"ratings"))
-```
-
-Then you can load other tables as well for some queries!
 
 
 # Step 1: Scope the Project and Gather Data
